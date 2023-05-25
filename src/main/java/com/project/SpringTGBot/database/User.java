@@ -15,4 +15,5 @@ public class User {
     private String name; //Text
     @NotNull
     private int msg_numb; //Integer
+    private int score;
 }

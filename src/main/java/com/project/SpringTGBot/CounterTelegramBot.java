@@ -5,6 +5,7 @@ import com.project.SpringTGBot.components.Buttons;
 import com.project.SpringTGBot.config.BotConfig;
 import com.project.SpringTGBot.database.User;
 import com.project.SpringTGBot.database.UserRepository;
+import com.project.SpringTGBot.handler.DefaultCommand;
 import jakarta.validation.constraints.NotNull;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -16,13 +17,18 @@ import org.telegram.telegrambots.meta.api.objects.Update;
 import org.telegram.telegrambots.meta.api.objects.commands.scope.BotCommandScopeDefault;
 import org.telegram.telegrambots.meta.exceptions.TelegramApiException;
 
+import java.util.Random;
+
 @Slf4j
 @Component
 public class CounterTelegramBot extends TelegramLongPollingBot implements BotCommands {
 
     @Autowired
     private UserRepository userRepository;
+    @Autowired
+    private DefaultCommand defaultCommand;
     final BotConfig config;
+    final Random random = new Random();
 
     public CounterTelegramBot(BotConfig config) {
         this.config = config;
@@ -57,7 +63,7 @@ public class CounterTelegramBot extends TelegramLongPollingBot implements BotCom
 
             if (update.getMessage().hasText()) {
                 receivedMessage = update.getMessage().getText();
-                botAnswerUtils(receivedMessage, chatId, userName);
+                botAnswerUtils(receivedMessage, chatId, userName, userId);
             }
         } else if (update.hasCallbackQuery()) {
             chatId = update.getCallbackQuery().getMessage().getChatId();
@@ -65,7 +71,7 @@ public class CounterTelegramBot extends TelegramLongPollingBot implements BotCom
             userName = update.getCallbackQuery().getFrom().getFirstName();
             receivedMessage = update.getCallbackQuery().getData();
 
-            botAnswerUtils(receivedMessage, chatId, userName);
+            botAnswerUtils(receivedMessage, chatId, userName, userId);
         }
 
         if(chatId == Long.valueOf(config.getChatId())){
@@ -73,13 +79,39 @@ public class CounterTelegramBot extends TelegramLongPollingBot implements BotCom
         }
     }
 
-    private void botAnswerUtils(String receivedMessage, long chatId, String userName) {
+    private void botAnswerUtils(String receivedMessage, long chatId, String userName, long userId) {
+        int luck = random.nextInt(2)+1;
         switch (receivedMessage){
             case "/start":
-                startBot(chatId, userName);
+                try {
+                    execute(defaultCommand.startBotOperation(chatId,userName));
+                } catch (TelegramApiException e) {
+                    throw new RuntimeException(e);
+                }
+                //startBot(chatId, userName);
                 break;
             case "/help":
                 sendHelpText(chatId, HELP_TEXT);
+                break;
+            case "/random":
+                randomizer(chatId);
+                break;
+            case "/1":
+                if (luck == 1) {
+                    choice(chatId, true, userId);
+                } else {
+                    choice(chatId, false, userId);
+                }
+                break;
+            case "/2":
+                if (luck == 2) {
+                    choice(chatId, true, userId);
+                } else {
+                    choice(chatId, false, userId);
+                }
+                break;
+            case "/score":
+                getScore(userId,chatId);
                 break;
             default: break;
         }
@@ -90,10 +122,39 @@ public class CounterTelegramBot extends TelegramLongPollingBot implements BotCom
         message.setChatId(chatId);
         message.setText("Hi, " + userName + "! I'm a Telegram bot.'");
         message.setReplyMarkup(Buttons.inlineMarkup());
-
         try {
             execute(message);
             log.info("Reply sent");
+        } catch (TelegramApiException e){
+            log.error(e.getMessage());
+        }
+    }
+
+    private void randomizer(long chatId) {
+        SendMessage message = new SendMessage();
+        message.setChatId(chatId);
+        message.setText("попробуй угадать число");
+        message.setReplyMarkup(Buttons.numberLine());
+        try {
+            execute(message);
+        } catch (TelegramApiException e){
+            log.error(e.getMessage());
+        }
+    }
+
+    private void choice(long chatId, boolean back, long userId) {
+        SendMessage message = new SendMessage();
+        message.setChatId(chatId);
+        if (back) {
+            message.setText("угадал + 1");
+            updateScoreDB(userId, true);
+        } else {
+            message.setText("не угадал => 0");
+            updateScoreDB(userId, false);
+        }
+        message.setReplyMarkup(Buttons.numberLine());
+        try {
+            execute(message);
         } catch (TelegramApiException e){
             log.error(e.getMessage());
         }
@@ -124,6 +185,27 @@ public class CounterTelegramBot extends TelegramLongPollingBot implements BotCom
             log.info("Added to DB: " + user);
         } else {
             userRepository.updateMsgNumberByUserId(userId);
+        }
+    }
+
+    private void updateScoreDB(long userId, boolean plus) {
+        if(plus) {
+            userRepository.updateScoreByUserId(userId);
+        } else {
+            userRepository.removeScoreByUserId(userId);
+        }
+    }
+
+    private void getScore(long userId, long chatId) {
+        SendMessage message = new SendMessage();
+        message.setChatId(chatId);
+        message.setText("твой счет: " + userRepository.findUserById(userId));
+
+        try {
+            execute(message);
+            log.info("Reply sent");
+        } catch (TelegramApiException e) {
+            log.error(e.getMessage());
         }
     }
 }
