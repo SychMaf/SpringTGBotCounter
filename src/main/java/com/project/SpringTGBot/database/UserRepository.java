@@ -26,5 +26,5 @@ public interface UserRepository extends CrudRepository<User, Long> {
 
     @Transactional
     @Query("select t.score from tg_data t where  t.id = :id")
-    Integer findUserById(@Param("id") long id);
+    Integer findUserScoreById(@Param("id") long id);
 }
