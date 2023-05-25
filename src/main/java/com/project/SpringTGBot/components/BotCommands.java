@@ -10,10 +10,4 @@ public interface BotCommands {
             new BotCommand("/help", "bot info"),
             new BotCommand("/random", "random moment")
     );
-
-    String HELP_TEXT = "This bot will help to count the number of messages in the chat. " +
-            "The following commands are available to you:\n\n" +
-            "/start - start the bot\n" +
-            "/help - help menu\n" +
-            "/random - попробовать угадать число";
 }
