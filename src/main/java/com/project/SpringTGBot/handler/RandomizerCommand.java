@@ -32,10 +32,10 @@ public class RandomizerCommand {
         message.setChatId(chatId);
         if (luck == userNum) {
             message.setText("угадал + 1");
-            userRepository.updateScoreByUserId(userId);
+            userRepository.updateScoreByUserId(userId, chatId);
         } else {
             message.setText("не угадал => 0");
-            userRepository.removeScoreByUserId(userId);
+            userRepository.removeScoreByUserId(userId, chatId);
         }
         message.setReplyMarkup(Buttons.numberLine());
         return message;
@@ -44,7 +44,7 @@ public class RandomizerCommand {
     public SendMessage getScore(long userId, long chatId) {
         SendMessage message = new SendMessage();
         message.setChatId(chatId);
-        message.setText("твой счет: " + userRepository.findUserScoreById(userId));
+        message.setText("твой счет: " + userRepository.findUserScoreById(userId, chatId));
         return message;
     }
 }

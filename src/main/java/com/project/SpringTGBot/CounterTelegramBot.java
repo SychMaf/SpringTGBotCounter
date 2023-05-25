@@ -55,7 +55,22 @@ public class CounterTelegramBot extends TelegramLongPollingBot implements BotCom
         String userName = null;
         String receivedMessage;
 
-        if (update.hasCallbackQuery()) {
+        if(update.hasMessage()) {
+            config.setChatId(update.getMessage().getChatId().toString());
+            chatId = update.getMessage().getChatId();
+            userId = update.getMessage().getFrom().getId();
+            userName = update.getMessage().getFrom().getFirstName();
+
+            if (update.getMessage().hasText()) {
+                receivedMessage = update.getMessage().getText();
+                try {
+                    botAnswerUtils(receivedMessage, chatId, userName, userId);
+                } catch (TelegramApiException e) {
+                    throw new RuntimeException(e);
+                }
+            }
+        } else if (update.hasCallbackQuery()) {
+            config.setChatId(update.getCallbackQuery().getMessage().getChatId().toString());
             chatId = update.getCallbackQuery().getMessage().getChatId();
             userId = update.getCallbackQuery().getFrom().getId();
             userName = update.getCallbackQuery().getFrom().getFirstName();
@@ -69,7 +84,7 @@ public class CounterTelegramBot extends TelegramLongPollingBot implements BotCom
         }
 
         if (chatId == Long.parseLong(config.getChatId())) {
-            updateDB(userId, userName);
+            updateDB(userId, userName, chatId);
         }
     }
 
@@ -86,17 +101,20 @@ public class CounterTelegramBot extends TelegramLongPollingBot implements BotCom
         }
     }
 
-    private void updateDB(long userId, String userName) {
-        if (userRepository.findById(userId).isEmpty()) {
+    private void updateDB(long userId, String userName, long chatId) {
+        if (userRepository.findById(chatId/2 + userId/3).isEmpty() || userRepository.findUserChatById(chatId, userId) == null) {
             User user = new User();
             user.setId(userId);
             user.setName(userName);
             user.setMsg_numb(1);
+            user.setChatId(chatId);
+
+            user.setUserKey(chatId/2 + userId/3);
 
             userRepository.save(user);
             log.info("Added to DB: " + user);
         } else {
-            userRepository.updateMsgNumberByUserId(userId);
+            userRepository.updateMsgNumberByUserId(userId, chatId);
         }
     }
 
