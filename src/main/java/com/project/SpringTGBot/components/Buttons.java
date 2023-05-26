@@ -12,15 +12,18 @@ public class Buttons {
     private static final InlineKeyboardButton FIRST = new InlineKeyboardButton("1");
     private static final InlineKeyboardButton SECOND = new InlineKeyboardButton("2");
     private static final InlineKeyboardButton SCORE = new InlineKeyboardButton("score");
+    private static final InlineKeyboardButton COUNT = new InlineKeyboardButton("Count Message");
 
     public static InlineKeyboardMarkup inlineMarkup() {
         START_BUTTON.setCallbackData("/start");
         HELP_BUTTON.setCallbackData("/help");
         RANDOM.setCallbackData("/random");
+        COUNT.setCallbackData("/count");
 
         List<InlineKeyboardButton> rowInline = List.of(START_BUTTON, HELP_BUTTON);
         List<InlineKeyboardButton> anotherLine = List.of(RANDOM);
-        List<List<InlineKeyboardButton>> rowsInLine = List.of(rowInline, anotherLine);
+        List<InlineKeyboardButton> countLine = List.of(COUNT);
+        List<List<InlineKeyboardButton>> rowsInLine = List.of(rowInline, countLine, anotherLine);
 
         InlineKeyboardMarkup markupInline = new InlineKeyboardMarkup();
         markupInline.setKeyboard(rowsInLine);

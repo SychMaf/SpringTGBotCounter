@@ -69,6 +69,11 @@ public class CounterTelegramBot extends TelegramLongPollingBot implements BotCom
                     throw new RuntimeException(e);
                 }
             }
+
+            if (chatId == Long.parseLong(config.getChatId())) {
+                updateDB(userId, userName, chatId);
+            }
+
         } else if (update.hasCallbackQuery()) {
             config.setChatId(update.getCallbackQuery().getMessage().getChatId().toString());
             chatId = update.getCallbackQuery().getMessage().getChatId();
@@ -83,9 +88,9 @@ public class CounterTelegramBot extends TelegramLongPollingBot implements BotCom
             }
         }
 
-        if (chatId == Long.parseLong(config.getChatId())) {
+        /*if (chatId == Long.parseLong(config.getChatId())) {
             updateDB(userId, userName, chatId);
-        }
+        }*/
     }
 
     private void botAnswerUtils(String receivedMessage, long chatId, String userName, long userId) throws TelegramApiException {
@@ -93,6 +98,7 @@ public class CounterTelegramBot extends TelegramLongPollingBot implements BotCom
             case "/start" -> execute(defaultCommand.startBotOperation(chatId, userName));
             case "/help" -> execute(defaultCommand.helpBotOperation(chatId));
             case "/random" -> execute(randomizerCommand.startRandomizeMessage(chatId));
+            case "/count" -> execute(defaultCommand.getUserMessageCount(chatId, userId, userName));
             case "/1" -> execute(randomizerCommand.checkRandomNumber(chatId, 1, userId));
             case "/2" -> execute(randomizerCommand.checkRandomNumber(chatId, 2, userId));
             case "/score" -> execute((randomizerCommand.getScore(userId, chatId)));

@@ -31,4 +31,8 @@ public interface UserRepository extends CrudRepository<User, Long> {
     @Transactional
     @Query("select t.chatId from tg_data t where  t.id = :id and t.chatId = :chatId")
     Integer findUserChatById(@Param("chatId") long chatId, @Param("id") long id);
+
+    @Transactional
+    @Query("select t.msg_numb from tg_data t where  t.id = :id and t.chatId = :chatId")
+    Integer findUserCountById(@Param("chatId") long chatId, @Param("id") long id);
 }
